@@ -1,22 +1,25 @@
 ---
 name: update-docs
 version: "1.0"
-description: >-
-  Use when implementing features, fixing bugs, or refactoring code that may
-  invalidate existing docs. Detects stale documentation by matching the code
-  diff against in-repo doc files and applies targeted updates. Relevant when
-  code changes rename, remove, or add APIs, fields, config keys, or CLI flags.
-  Also applies when the user says "update docs", "check docs", or "are the
-  docs stale", or when reviewing a branch for documentation accuracy.
+description: Detects documentation files that have become stale due to code changes and applies targeted updates. Builds an identifier checklist from the diff, greps documentation for matches, evaluates candidates in two passes, reviews beyond grep results, and edits confirmed stale docs in-place.
 ---
 
 # Update Docs
 
 Code changes can silently invalidate documentation. A renamed function,
-a changed API signature, a removed configuration option, each can leave
+a changed API signature, a removed configuration option — each can leave
 docs describing behavior that no longer exists. This skill detects that
 drift by matching the code diff against in-repo documentation and
 updating docs whose descriptions contradict the new code.
+
+## When to Activate
+
+- After implementing a feature or bug fix, before creating a PR
+- When code changes rename, remove, or change the behavior of public APIs
+- When the user says "update docs", "check docs", or "are the docs stale"
+- When new code adds features, fields, or APIs that existing docs should reference
+- After refactoring that changes function signatures, config keys, or CLI flags
+- When reviewing a branch and noticing documentation may be out of date
 
 ## Process
 
@@ -164,11 +167,16 @@ For each doc confirmed stale:
 2. Update the documentation so it accurately reflects the new code
 3. Preserve the file's existing format, style, and structure
 
-### 8. Present changes for review
+### 8. Commit changes
 
-Do **not** commit automatically. Instead, present the user with a
-summary of every file you updated and what changed in each one.
-Let the user review the changes and decide whether to commit.
+If any documentation files were updated:
+
+```bash
+git add <updated_doc_files>
+git commit -m "[TICKET_KEY] docs: update documentation for code changes"
+```
+
+Replace TICKET_KEY with the actual ticket key from the task context.
 
 ### 9. Output
 
