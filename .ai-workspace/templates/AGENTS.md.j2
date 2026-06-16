@@ -1,0 +1,35 @@
+# Agent Instructions
+
+{% if project_content %}
+{{ project_content }}
+
+{% endif %}
+{% if features.agent_docs.enabled and features.agent_docs.docs %}
+## Documentation
+
+The [`agent-docs/`](agent-docs/) directory contains modular, task-focused documentation.
+
+**Before starting any task:**
+1. Review the list below and identify documents relevant to your task
+2. Read ALL identified relevant documents before proceeding
+3. Re-evaluate relevance whenever you gain new insights during the task
+
+| Document | Description | When to read |
+|----------|-------------|--------------|
+{% for doc in features.agent_docs.docs %}
+| [`{{ doc.display_name }}`]({{ doc.doc_path }}) | {{ doc.description }} | {{ doc.when_to_read }} |
+{% endfor %}
+
+{% endif %}
+{% if features.skills.enabled and features.skills.count > 0 %}
+## Skills
+
+This workspace provides {{ features.skills.count }} skill(s) in the [`skills/`](skills/) directory.
+
+{% endif %}
+{% if features.commands.enabled and features.commands.count > 0 %}
+## Commands
+
+This workspace provides {{ features.commands.count }} command(s) in the [`commands/`](commands/) directory.
+
+{% endif %}
