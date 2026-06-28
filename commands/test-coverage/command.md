@@ -92,23 +92,23 @@ COVERAGE SUMMARY:
 FILE COVERAGE:
   File                            Coverage  Status
   ──────────────────────────────────────────────────
-  scripts/group_issues.py           85%     PASS
-  scripts/summarize_epics.py        45%     FAIL
-  scripts/filter_standalone_tasks.py 0%     FAIL (no tests)
-  utils/constants.py                90%     PASS
+  src/models.py                     85%     PASS
+  src/processor.py                  45%     FAIL
+  src/exporter.py                    0%     FAIL (no tests)
+  src/utils.py                      90%     PASS
 
 FILES MISSING TESTS:
-  scripts/filter_standalone_tasks.py — AI task filtering (HIGH priority)
-  scripts/categorize_ai_work.py — AI categorization (HIGH priority)
+  src/exporter.py — Data export logic (HIGH priority)
+  src/validator.py — Input validation (HIGH priority)
 
 FUNCTIONS NEEDING TESTS:
-  summarize_epics.py:parse_ai_response — Complex parsing logic
-  summarize_epics.py:quick_ai_check_epic — LLM interaction
+  processor.py:transform_records — Complex data transformation
+  processor.py:merge_duplicates — Deduplication logic
 
 PRIORITY RECOMMENDATIONS:
-  1. [HIGH] Add tests for filter_standalone_tasks.py — core pipeline step
-  2. [HIGH] Add tests for parse_ai_response — complex regex parsing
-  3. [MEDIUM] Add edge case tests for group_issues with closed issues
+  1. [HIGH] Add tests for exporter.py — core output step
+  2. [HIGH] Add tests for transform_records — complex branching
+  3. [MEDIUM] Add edge case tests for merge_duplicates with empty inputs
 ```
 
 ## Focus Areas

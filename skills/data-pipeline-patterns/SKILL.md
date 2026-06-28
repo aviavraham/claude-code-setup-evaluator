@@ -1,7 +1,7 @@
 ---
 name: data-pipeline-patterns
 version: "1.0"
-description: Team conventions for Python data pipelines — stage structure, JSON output format, debugging workflow, and anti-patterns. Supplements standard patterns with team-specific rules.
+description: "Use when building, modifying, or debugging Python data pipelines. Team conventions for stage structure, JSON output format, debugging workflow, and anti-patterns."
 ---
 
 # Data Pipeline Patterns — Team Conventions

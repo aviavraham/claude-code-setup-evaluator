@@ -1,7 +1,7 @@
 ---
 name: python-conventions
 version: "1.0"
-description: Team-specific Python conventions — credential management with dotenv, API client rules, LLM response parsing, TDD workflow, and testing patterns for data pipelines.
+description: "Use when writing Python code that handles credentials, calls external APIs, parses LLM responses, or follows TDD. Team-specific conventions for dotenv, API clients, and testing patterns."
 ---
 
 # Python Conventions — Team Patterns

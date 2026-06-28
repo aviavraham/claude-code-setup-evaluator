@@ -1,7 +1,7 @@
 ---
 name: refactoring-patterns
 version: "1.0"
-description: Measurement-driven code refactoring — profile before changing, measure after, keep only if metrics improve. Covers complexity reduction, extraction patterns, and bulk refactoring for mechanical changes across many files.
+description: "Use when refactoring, cleaning up, or simplifying code. Measurement-driven approach — profile before changing, measure after, keep only if metrics improve. Covers complexity reduction, extraction patterns, and bulk refactoring."
 ---
 
 # Refactoring Patterns
