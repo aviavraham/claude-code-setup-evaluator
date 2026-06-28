@@ -1,1 +1,0 @@
-../../commands/check-code/command.md
