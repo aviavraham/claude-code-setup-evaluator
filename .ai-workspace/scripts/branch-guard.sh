@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# PreToolUse hook: warn (not block) when editing files on a default branch.
+# PreToolUse hook: block edits on default branch and ask user to decide.
 # Extracts the file path from CLAUDE_TOOL_INPUT, checks if it's inside
-# repositories/, and warns if that repo is on main/master.
-# Exits 0 always — advisory only.
+# repositories/, and blocks if that repo is on main/master.
 
 FILE=$(echo "$CLAUDE_TOOL_INPUT" | grep -oP '"file_path"\s*:\s*"\K[^"]+' 2>/dev/null)
 [ -z "$FILE" ] && exit 0
@@ -19,8 +18,10 @@ BRANCH=$(git -C "$REPO_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null)
 [ -z "$BRANCH" ] && exit 0
 
 if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
-  echo "WARNING: $REPO_DIR is on '$BRANCH'. Consider creating a feature branch before making changes."
-  echo "  Run: git -C $REPO_DIR checkout -b <branch-name>"
+  echo "BLOCKED: $REPO_DIR is on '$BRANCH'."
+  echo "Ask the user whether to continue on '$BRANCH' or create a new feature branch."
+  echo "  To create a branch: git -C $REPO_DIR checkout -b <branch-name>"
+  exit 2
 fi
 
 exit 0
