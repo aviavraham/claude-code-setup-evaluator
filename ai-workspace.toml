@@ -9,6 +9,12 @@ commands = true
 agent_docs = true
 
 [distribution]
+# Target directories for skills (symlinked). Codex discovers .agents/skills/
+# automatically; Claude Code reads skills/ directly.
+skills_paths = [
+    ".agents/skills",
+]
+
 # Target directories for commands
 commands_paths = [
     ".claude/commands",
