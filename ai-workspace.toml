@@ -31,11 +31,17 @@ commands_paths = [
 verify = ["verification-loop"]
 quality-gate = ["verification-loop"]
 refactor-safe = ["verification-loop", "refactoring-patterns"]
-test-coverage = ["verification-loop"]
+test-coverage = ["test-coverage"]
+architecture-docs = ["architecture-docs"]
+dep-check = ["dep-check"]
 update-docs = ["update-docs"]
-diff-explain = []  # standalone command
+diff-explain = ["diff-explain"]
 explain-code = []  # standalone command
-prompt-test = []  # standalone command
+prompt-test = ["prompt-test"]
+repo-sync = ["repo-sync"]
+recap = ["recap"]
+changelog = ["changelog"]
+env-check = ["env-check"]
 ai-engineer-review = []  # standalone command
 
 # Skills load declaratively (no manual trigger needed)

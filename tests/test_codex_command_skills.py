@@ -6,7 +6,17 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).parent.parent
-COMMAND_SKILLS = ("repo-sync", "diff-explain", "changelog", "recap", "env-check", "prompt-test")
+COMMAND_SKILLS = (
+    "repo-sync",
+    "diff-explain",
+    "changelog",
+    "recap",
+    "env-check",
+    "prompt-test",
+    "architecture-docs",
+    "dep-check",
+    "test-coverage",
+)
 
 
 @pytest.mark.parametrize("name", COMMAND_SKILLS)

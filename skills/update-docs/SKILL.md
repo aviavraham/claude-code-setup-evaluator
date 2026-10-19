@@ -1,6 +1,7 @@
 ---
 name: update-docs
-version: "1.0"
+metadata:
+  version: "1.0"
 description: >-
   Use when implementing features, fixing bugs, or refactoring code that may
   invalidate existing docs. Detects stale documentation by matching the code
@@ -12,197 +13,83 @@ description: >-
 
 # Update Docs
 
-Code changes can silently invalidate documentation. A renamed function,
-a changed API signature, a removed configuration option, each can leave
-docs describing behavior that no longer exists. This skill detects that
-drift by matching the code diff against in-repo documentation and
-updating docs whose descriptions contradict the new code.
+Review code changes against current documentation, including documentation
+already edited in the branch or working tree. Preserve the user's existing
+edits and update only claims contradicted by the changed behavior.
 
-## Process
+## Scope and mode
 
-Follow these steps in order. Do not skip steps.
+Resolve the supplied repository or current focus to an absolute path. Accept
+a documentation path to restrict candidates, and an explicit comparison base
+when supplied. “Check docs”, “review docs”, or `--check` means report findings
+and proposed corrections without writing files. An explicit request to update
+or fix docs permits targeted edits. If invoked automatically while implementing
+a change, follow the task's existing authorization for documentation edits.
 
-### 1. Get the diff
+## Collect the complete change evidence
 
-```bash
-DEFAULT_BRANCH=$(git rev-parse --abbrev-ref origin/HEAD | cut -d/ -f2)
-git diff $(git merge-base HEAD "$DEFAULT_BRANCH")..HEAD --no-color
-```
+1. Record Git status and distinguish committed branch changes, staged changes,
+   unstaged changes, and relevant untracked source/docs. Inspect the actual
+   patches and current file contents, not just filenames or commit subjects.
+2. For committed branch changes, validate an explicit base if provided.
+   Otherwise discover the default branch from available local remote-HEAD
+   refs or trusted project/PR configuration. Use the actual remote, which
+   need not be `origin`, and preserve the full branch name, including slashes.
+   Verified local default-branch candidates can be used when unambiguous;
+   a feature branch's upstream is not necessarily the comparison base.
+3. Use the verified base's merge-base with HEAD for the committed branch diff.
+   Separately inspect `git diff --cached` and `git diff` for local changes.
+   Account for renames and deletions using both old and new identifiers.
+   Compare documentation against the effective current code; explain any
+   staging boundary that would leave a commit's documentation inconsistent.
+4. If the base, history, or any required diff is unavailable, report the
+   limitation and continue the checks that remain possible. Do not interpret
+   a Git error as an empty diff or report a complete clean review. Ask for a
+   base only when needed to finish the requested comparison.
+5. If all inspected code diffs are empty, still review relevant documentation
+   edits for accuracy. Skip untracked binaries, generated artifacts, and
+   secret-bearing files; disclose exclusions affecting the review.
 
-Record the list of files changed in the PR:
+## Discover and evaluate documentation
 
-```bash
-git diff --name-only $(git merge-base HEAD "$DEFAULT_BRANCH")..HEAD
-```
+Discover existing documentation within the selected repository: README/index
+files, dedicated documentation trees, diagrams, and documented configuration
+examples. Exclude vendored dependencies and generated output, not ordinary
+docs changed in the PR. Review generated docs through their source when
+relevant; do not edit generated output directly. Historical changelog/release
+entries remain descriptions of their original release.
 
-If the diff is empty, output `NO_DOCS_UPDATED` and stop.
+Build a per-file checklist of changed APIs, CLI flags, config keys, types,
+and behavior. Search documentation for specific old and new identifiers with
+literal matching (for example, `rg -n -F -- "$identifier"` over the selected
+doc paths). Include every relevant changed source file; explain omissions.
+Do not silently truncate discovery to the first 500 files or scan unrelated
+repositories.
 
-### 2. Discover documentation files
+For each matched candidate, inspect the relevant context, then read the full
+document before editing it. Mark claims stale only when the described
+signature, behavior, or semantics contradict the code. A mention alone is not
+a defect. Include docs already modified by the user: they can still be stale.
 
-Explore the repository structure to identify where documentation lives.
-Different repos organize docs differently — look for dedicated doc
-directories, standalone files like README.md at any level, and any
-other files whose primary purpose is documentation.
+Also read the repository README and relevant documentation indexes/overviews,
+even if identifier searches found no matches. Look for prose descriptions and
+new behavior that cannot be found by searching exact code names.
 
-Search broadly — include diagram and config files that live alongside
-docs:
+## Apply or report
 
-```bash
-find . -type f \( -name "*.md" -o -name "*.rst" -o -name "*.adoc" \
-  -o -name "*.txt" -o -name "*.mmd" -o -name "*.puml" \
-  -o -name "*.yaml" -o -name "*.yml" \) \
-  ! -path "./.git/*" ! -path "./.forge/*" ! -path "./vendor/*" \
-  ! -path "./node_modules/*" \
-  | head -500
-```
+For an audit-only request, report stale passages with path/line, code evidence,
+and proposed corrections. Leave all files unchanged.
 
-Then filter the results:
+For an authorized update, make narrow edits to existing documentation while
+preserving format, unrelated content, and user changes. Do not create new docs
+or rewrite history as part of this workflow. Recheck each corrected claim and
+review the final diff for unintended changes. Follow the project's configured
+documentation checks when applicable; report anything not verified.
 
-- **Exclude** files already modified in the PR (they are being actively
-  updated — check against the changed file list from step 1)
-- **Exclude** auto-generated files (lockfiles, generated API docs,
-  swagger output)
-- **Exclude** changelog and release note entries that describe past
-  releases
-- **Exclude** YAML/YML files that are not documentation. Only keep
-  YAML files that live in doc directories or are clearly documentation
-  examples.
-
-If no documentation files exist in the repo, output `NO_DOCS_FOUND`
-and stop.
-
-### 3. Build the identifier checklist
-
-Go through **every** changed file in the PR. For each file, extract
-identifiers from the modified lines (lines starting with `+` or `-`)
-and from diff hunk headers (`@@` lines). Write them down as a numbered
-checklist — one entry per changed file, with all identifiers from that
-file.
-
-Use the most specific form of each identifier. CLI flag names,
-configuration keys, full function names, and type names are good —
-they match only relevant docs. Avoid generic short words that would
-match hundreds of unrelated files. If a generic term is the only
-identifier available for a change, include it, but prefer specific
-forms when they exist.
-
-Do not skip files. Do not prioritize some files over others. Every
-changed file gets an entry in the checklist.
-
-### 4. Search docs for every identifier
-
-Write a shell script that takes the identifiers from step 3 and
-greps for each one across the documentation files from step 2.
-Run the script in a single Bash call:
-
-```bash
-for id in "identifier1" "identifier2" "identifier3"; do
-  matches=$(grep -rlFi "$id" <doc_files> 2>/dev/null)
-  if [ -n "$matches" ]; then
-    echo "MATCH: $id -> $matches"
-  fi
-done
-```
-
-Include every identifier from every checklist entry in the `for`
-loop. The script handles the searching mechanically — no identifiers
-are skipped.
-
-From the script output, collect all matched doc files into a
-candidate list.
-
-### 5. Evaluate candidates (two passes)
-
-**Pass 1 — Quick scan.** For each candidate, view only the lines
-that matched the grep (use `grep -n` to see them in context). Based
-on the matching lines alone, give a quick verdict:
-
-```
-- path/to/doc.md -> possibly stale (describes behavior that changed)
-- path/to/other.md -> not stale (mentions identifier in passing)
-```
-
-Every candidate must have a verdict. Do not skip candidates.
-
-**Pass 2 — Deep read.** Only for candidates marked "possibly stale"
-in pass 1. Read the full file alongside the relevant section of the
-diff. Confirm whether the doc is actually stale. Check the file
-header for auto-generation markers — if the file is generated from
-source, skip it.
-
-When evaluating:
-
-- **Only flag docs whose content is now incorrect.** A doc that
-  mentions an identifier is not stale if the described behavior is
-  unchanged. It is stale only if the behavior, signature, or semantics
-  changed in a way that makes the doc misleading.
-- **Do not flag changelog entries or release notes that describe past
-  releases.** Historical entries are not stale because the code evolved.
-
-### 6. Review beyond grep results
-
-This step catches stale references that grep cannot find because
-documentation often uses prose names that differ from code identifiers,
-and new code introduces identifiers that don't exist in any doc yet.
-
-Always read the repository's README. Also read any main index or
-overview files at the root of doc directories. Read each file fully
-and compare it against the diff. Determine whether it describes any
-behavior, flow, or feature that the code changes affected. If it
-does, add it to the list of confirmed stale docs.
-
-Also scan the discovered documentation files for any that may cover
-the same area as the changed code, based on your understanding of
-what the diff does. You don't need to read every file — use file
-names and paths to decide which ones are worth checking.
-
-### 7. Update confirmed stale docs
-
-For each doc confirmed stale:
-
-1. Read the full file
-2. Update the documentation so it accurately reflects the new code
-3. Preserve the file's existing format, style, and structure
-
-### 8. Present changes for review
-
-Do **not** commit automatically. Instead, present the user with a
-summary of every file you updated and what changed in each one.
-Let the user review the changes and decide whether to commit.
-
-### 9. Output
-
-If docs were updated:
-```
-DOCS_UPDATED
-
-Updated:
-- [path/to/doc.md] Brief description of what was updated and why
-- [path/to/other.rst] Brief description
-```
-
-If no docs needed updating:
-```
-NO_DOCS_UPDATED
-```
-
-If no doc files found:
-```
-NO_DOCS_FOUND
-```
-
-## Constraints
-
-- **Only change what the diff affects.** Fix stale content and add
-  new information that the diff introduced to existing docs. Do not
-  improve, restructure, or reformat documentation that is unrelated
-  to the code change.
-- **Do not update historical entries.** Changelog and release note
-  entries for past releases are not stale — they describe what happened
-  at that point in time.
-- **Skip auto-generated files.** Do not edit files that are generated
-  from source. They should be regenerated, not manually patched.
-- **Update existing files only.** Do not create new doc files from
-  scratch.
-- **Preserve format.** Match the existing file's formatting conventions
-  (heading style, list style, code block syntax, etc.).
+Report scope/base, change states inspected, findings or edits, and limitations.
+Use `DOCS_STALE` for confirmed audit-only findings, `DOCS_UPDATED` after edits,
+`NO_DOCS_UPDATED` for a complete review needing no corrections, or
+`NO_DOCS_FOUND` when complete discovery finds no applicable docs. Use
+`INCOMPLETE_REVIEW` when missing evidence prevents a complete conclusion,
+including partial findings when available. Do not stage, commit, or publish
+documentation automatically.

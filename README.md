@@ -105,10 +105,15 @@ After adding, Claude picks them up automatically.
 ### Codex CLI workflows
 
 From this workspace, invoke `$repo-sync`, `$diff-explain`, `$changelog`,
-`$recap`, `$env-check`, or `$prompt-test`. These six skills require explicit
+`$recap`, `$env-check`, `$prompt-test`, `$architecture-docs`, `$dep-check`,
+or `$test-coverage`. These nine skills require explicit
 invocation in Codex; they do not activate automatically. They are distributed
 through `.agents/skills/` and share their workflows with the corresponding
 slash commands. They are workspace-local, not globally installed.
+
+`$update-docs` is also available: “check docs” or `--check` reports findings
+without edits; an update request permits targeted corrections, including in
+documentation already changed in the branch.
 
 - [`GUIDE.md`](GUIDE.md) — Full reference for all skills, commands, and hooks
 

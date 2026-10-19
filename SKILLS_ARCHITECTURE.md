@@ -10,7 +10,7 @@ This document maps all skills, their purpose, activation triggers, and relations
 
 **`refactoring-patterns`** — Measurement-driven refactoring (profile → refactor → measure). Activates when user says "refactor", "clean up", "simplify", or when code has high complexity. Ensures changes improve metrics, not just code appearance.
 
-**`update-docs`** — Detects stale documentation after code changes by matching diff against in-repo docs. Finds and updates prose that contradicts new code. Auto-activates when implementing features/fixes that rename, remove, or add APIs.
+**`update-docs`** — Reviews committed, staged, and unstaged changes against current docs, including already-edited docs. Check-only requests report findings without edits; update requests permit targeted corrections. Missing comparison evidence produces an incomplete review rather than a clean verdict.
 
 **`security-check`** — Scans for credential leaks, secrets in code, insecure patterns, LLM API key exposure, PII leakage to external services, and `.env/.gitignore` misconfigurations. Runs automatically before commits and when editing credential-related code.
 
@@ -32,6 +32,13 @@ Replaces separate `python-conventions` and `data-pipeline-patterns` skills (merg
 
 ## Skill Activation Model
 
+The nine migrated command skills described in [GUIDE.md](GUIDE.md#codex-cli-command-skills)
+use explicit `$skill-name` invocation in Codex. Their `agents/openai.yaml` files
+disable implicit invocation; the corresponding slash commands read the same
+skill files. `architecture-docs` documents observed design, `dep-check` audits
+the project environment/lockfiles, and `test-coverage` uses measured coverage
+and configured thresholds without inventing percentages or per-file limits.
+
 | Skill | Activation Type | Trigger |
 |-------|-----------------|---------|
 | `verification-loop` | Command-invoked | `/verify`, `/quality-gate`, code-review commands |
@@ -51,15 +58,18 @@ Commands that rely on specific skills:
 | `/verify` | `verification-loop` | Runs phases 1-4: environment, types, lint, tests |
 | `/quality-gate` | `verification-loop` | Runs phases 1-4 + phase 6: plus pre-push security |
 | `/refactor-safe` | `verification-loop`, `refactoring-patterns` | Verify code works before refactoring, then measure |
-| `/test-coverage` | `verification-loop` | Part of verification loop; finds untested code |
+| `/test-coverage` | `test-coverage` | Measures coverage and addresses requested meaningful gaps |
 | `/update-docs` | `update-docs` | Standalone; detects stale docs from code changes |
-| `/diff-explain` | None | Standalone; explains diffs by intent |
+| `/diff-explain` | `diff-explain` | Explains staged/unstaged changes and Git comparisons |
 | `/explain-code` | None | Standalone; layered explanation by complexity |
-| `/prompt-test` | None | Standalone; tests LLM prompts against samples |
+| `/prompt-test` | `prompt-test` | Evaluates prompts using sanitized fixtures and explicit live-call scope |
 | `/ai-engineer-review` | None | Standalone; architectural review |
-| `/changelog` | None | Standalone; generates changelog from commits |
-| `/dep-check` | None | Standalone; audits dependencies |
-| `/env-check` | None | Standalone; validates local dev environment |
+| `/changelog` | `changelog` | Drafts release notes from a disclosed history baseline |
+| `/dep-check` | `dep-check` | Audits project dependencies and discloses incomplete checks |
+| `/env-check` | `env-check` | Diagnoses the project environment without repairs |
+| `/architecture-docs` | `architecture-docs` | Documents existing architecture with optional quick Mermaid output |
+| `/repo-sync` | `repo-sync` | Checks upstream freshness and local changes in focused repositories |
+| `/recap` | `recap` | Summarizes observed session work or a requested history range |
 
 ## Removed Skills
 
@@ -82,7 +92,7 @@ Always-loaded skills (loaded once per session):
 **Total always-loaded: ~17KB** — under 5% of typical conversation context.
 
 On-demand skills (load only when invoked):
-- `update-docs` — ~8KB (detailed multi-step process)
+- `update-docs` — reads relevant docs and change evidence when selected
 
 ## Design Rationale
 
