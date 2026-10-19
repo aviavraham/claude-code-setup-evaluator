@@ -1,22 +1,21 @@
 ---
 name: cost-speed-meter
-version: "1.0"
-description: Track command execution time across sessions. Show which operations are slow, suggest faster paths (unit tests vs integration, cached builds), and measure if optimizations worked. Polyglot language support (Python, Node, Rust, Go).
+description: Use when the user asks to measure command execution time or optimize a feedback loop. Records explicit measurements and recommends faster alternatives such as unit tests versus integration tests. It is opt-in; it does not run on every command.
 ---
 
-# Cost & Speed Meter Skill
+# Cost & Speed Meter
 
-Track what's slow. Measure improvements. Suggest faster paths.
+Track execution time. Suggest faster paths. Prove optimizations worked.
 
-Every bash command execution is timed and stored. Across sessions, you see trends: is your test suite getting slower? Did that optimization work? Should you run unit tests instead of the full suite for quick feedback?
+Measure only commands the user asks to compare. Across sessions, the optional metrics file can show trends without adding noise or overhead to normal work.
 
-## When to Activate
+## When to Use
 
-- After running tests, builds, or lint (timing is tracked automatically)
-- When focused on feedback loop speed (which path is fastest?)
-- When investigating performance regressions (did something get slower?)
-- Before/after optimization work (prove it helped)
-- Multi-repo work (compare speed across projects)
+- User asks to measure tests, builds, or lint commands
+- User asks: "is this slow?", "how long did that take?", "what's the slowest operation?"
+- User asks: "what's a faster way to do this?", "what's the quick feedback loop?"
+- User is optimizing something — measure before, optimize, measure after to prove it worked
+- Working across multiple repos — compare execution costs
 
 ## What It Tracks
 
@@ -30,22 +29,13 @@ Every bash command execution is timed and stored. Across sessions, you see trend
 
 ## Output
 
-### Session Status (automatic)
-
-After relevant commands, status line shows:
-```
-[METRICS: tests 45s | build 8s | slowest: integration tests]
-```
-
 ### Command Reports
 
 On demand:
 
 ```
-/metrics                   Show this session's measurements
-/metrics-report            Weekly summary (last 7 days, trends)
-/metrics-slowest           Which operations cost the most time
-/metrics-recommend         Suggest faster paths (unit tests vs integration)
+Use `skills/cost-speed-meter/meter.sh show` for current measurements or
+`skills/cost-speed-meter/meter.sh report` for a weekly summary.
 ```
 
 ## Fast-Path Recommendations
@@ -168,8 +158,8 @@ if "Cargo.toml" with [dev-dependencies]:
 
 ## Behavioral Rules
 
-- **Always track** — every bash command is timed (overhead: <10ms)
+- **Opt-in only** — never intercept or time unrelated commands
 - **No alerts** — just data, no noise
 - **Trends** — report 7-day moving average, flag +10% growth
 - **Respect RTK** — if RTK is filtering, meter still gets accurate time
-- **No modifications** — meter reads, doesn't change command output
+- **No command interception** — measurement is explicit and does not change command output
