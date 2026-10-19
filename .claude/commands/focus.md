@@ -10,12 +10,29 @@ Switch repository focus mid-session.
 
 ### Step 1: Scan Available Repositories
 
+Locate the workspace containing this command, not just the current Git root
+(a project under `repositories/` has its own Git root). The scan below searches
+upward from the working directory. If working elsewhere, set `WORKSPACE_ROOT`
+to the absolute workspace path derived from this command or skill's location.
+Do not guess a path or silently scan a different workspace.
+
 ```bash
-# List all git repos in repositories/
-for dir in repositories/*/; do
-  if [ -d "$dir/.git" ]; then
+workspace_root="${WORKSPACE_ROOT:-$PWD}"
+while [ ! -f "$workspace_root/ai-workspace.toml" ] || [ ! -f "$workspace_root/commands/focus/command.md" ]; do
+  if [ "$workspace_root" = / ]; then
+    echo "Workspace not found. Set WORKSPACE_ROOT to the workspace containing this command." >&2
+    exit 1
+  fi
+  workspace_root=$(dirname "$workspace_root")
+done
+
+i=0
+for dir in "$workspace_root"/repositories/*/; do
+  # Clones have a .git directory; submodules and worktrees have a .git file.
+  if [ -e "$dir/.git" ] && git -C "$dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    i=$((i + 1))
     name=$(basename "$dir")
-    branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+    branch=$(git -C "$dir" symbolic-ref --short -q HEAD 2>/dev/null || git -C "$dir" rev-parse --short HEAD 2>/dev/null || echo "unknown")
     status=$(git -C "$dir" status --porcelain 2>/dev/null)
     if [ -n "$status" ]; then
       count=$(echo "$status" | wc -l | tr -d ' ')
@@ -26,6 +43,9 @@ for dir in repositories/*/; do
     printf "  %s. %-30s (%s)\n" "$i" "$name" "$hint"
   fi
 done
+if [ "$i" -eq 0 ]; then
+  echo "No repositories found in $workspace_root/repositories/."
+fi
 ```
 
 ### Step 2: Present the Menu
@@ -67,6 +87,11 @@ Focused on: backend-api, frontend-app
 
 Then continue working. Apply the same focus constraint: only read/modify files in the selected repo(s) unless the user explicitly asks otherwise.
 
+Focus is a scope instruction for the current conversation. It does not change
+filesystem permissions, create a sandbox, or change the working directory of
+later tool calls. Use the selected repositories' absolute paths explicitly.
+Workspace command/skill metadata may be read to operate `/focus` itself.
+
 ### Step 5: Update tmux Window Name
 
 If running inside tmux, rename the current window to reflect the focused repo(s):
@@ -91,3 +116,5 @@ If not inside tmux, skip this step silently.
 - This command **replaces** the current focus — it does not add to it
 - Always scan the actual `repositories/` directory — never use a cached list
 - If only one repo exists, auto-select it and confirm without asking
+- If no repositories are found, report that and preserve the current focus
+- Reject unknown names or out-of-range numbers without replacing the current focus
