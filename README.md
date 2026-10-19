@@ -102,6 +102,14 @@ After adding, Claude picks them up automatically.
 
 ## Learn More
 
+### Codex CLI workflows
+
+From this workspace, invoke `$repo-sync`, `$diff-explain`, `$changelog`,
+`$recap`, `$env-check`, or `$prompt-test`. These six skills require explicit
+invocation in Codex; they do not activate automatically. They are distributed
+through `.agents/skills/` and share their workflows with the corresponding
+slash commands. They are workspace-local, not globally installed.
+
 - [`GUIDE.md`](GUIDE.md) — Full reference for all skills, commands, and hooks
 
 ## Credits

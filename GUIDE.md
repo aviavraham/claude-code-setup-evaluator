@@ -69,13 +69,15 @@ Your daily workflow in 3 commands:
 /quality-gate  → before pushing
 ```
 
-Everything else is available when you need it. Skills activate automatically.
+Everything else is available when you need it. Most skills activate when
+relevant; the Codex command skills below require explicit invocation.
 
 ---
 
-## Skills (automatic)
+## Skills
 
-Skills activate on their own — you just get better results. They live in `skills/*/SKILL.md` and are loaded by Claude when relevant.
+Skills live in `skills/*/SKILL.md`. Most provide conventions when relevant;
+the six Codex command skills below require explicit invocation in Codex CLI.
 
 | Skill | Purpose | When it activates |
 |-------|---------|-------------------|
@@ -88,6 +90,30 @@ Skills activate on their own — you just get better results. They live in `skil
 | `ci-guard` | Detects repos with no CI workflow (GitHub Actions, GitLab CI, CircleCI) and prompts you to add one. Skips repos marked research-only. | When you start work in a repo under `repositories/` |
 | `semantic-versioning` | Reads conventional commit prefixes to decide whether the next release is major, minor, or patch | When you commit or push and the repo needs a version bump, or you ask about releases |
 | `cost-speed-meter` | Records explicit timing measurements and recommends faster alternatives, such as unit over integration tests. Opt-in, not on every command. | When you ask to time a command or speed up a feedback loop |
+
+### Codex CLI command skills
+
+These workflows are available locally through `.agents/skills/`. Invoke them
+with a dollar sign and optional arguments, for example `$diff-explain main`
+or `$repo-sync repositories/backend-api`. They do not run automatically.
+
+- `$repo-sync` checks focused repositories against their configured upstreams;
+  failed fetches leave remote freshness unknown.
+- `$diff-explain` explains staged/unstaged changes, commits, ranges, or PRs.
+- `$changelog` drafts release notes with an explicit history baseline.
+- `$recap` summarizes observed session work or a requested history range.
+- `$env-check` diagnoses setup without installing packages or changing files.
+- `$prompt-test` evaluates prompts locally by default; live model calls require
+  authorization for the endpoint, inputs, and call budget.
+
+The corresponding slash commands read these same skill files. To update a
+workflow, edit its `skills/<name>/SKILL.md`, then validate and redistribute:
+
+```bash
+uv run .ai-workspace/scripts/transpile-skills.py
+```
+
+This installs workspace symlinks only; it does not install skills globally.
 
 ### On-demand docs (agent-docs/)
 
